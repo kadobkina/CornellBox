@@ -12,6 +12,11 @@ namespace CornellBox
     /// </summary>
     public enum AxisType { X, Y, Z };
 
+    /// <summary>
+    /// Типы фигур
+    /// </summary>
+    public enum ShapeType { Cube, Circle};
+
     // точка
     public class Point
     {
@@ -167,14 +172,20 @@ namespace CornellBox
     // фигура
     public class Shape
     {
+        public ShapeType shapeType;
         public List<Point> Vertices = new List<Point>(); 
         public List<Face> Faces = new List<Face>();        
         public Surface surface;
-        public Shape() { }
+        public Shape(ShapeType st) 
+        {
+            shapeType = st;
+        }
         public Color color = Color.Black;
 
         public Shape(Shape shape)
         {
+            shapeType = shape.shapeType;
+
             foreach (Point p in shape.Vertices)
                 Vertices.Add(new Point(p));
 
@@ -213,7 +224,7 @@ namespace CornellBox
         // создает комнату
         static public Shape createBox()
         {
-            Shape shape = new Shape();
+            Shape shape = new Shape(ShapeType.Cube);
             Point a = new Point(10, 10, 10);
             Point b = new Point(-10, 10, 10);
             Point c = new Point(-10, 10, -10);
@@ -258,7 +269,7 @@ namespace CornellBox
             shape.Faces.Add(top);
             shape.Faces.Add(bottom);
 
-            shape.surface = new Surface(0, 0, 0.05, 0.7, 1);
+            shape.surface = new Surface(0, 0, 0.03, 0.8, 1);
 
             return shape;
         }
@@ -266,7 +277,7 @@ namespace CornellBox
         // создает куб
         static public Shape createCube(double size)
         {
-            Shape cube = new Shape();
+            Shape cube = new Shape(ShapeType.Cube);
             Point a = new Point(size, size, size);
             Point b = new Point(-size, size, size);
             Point c = new Point(-size, size, -size);
@@ -304,14 +315,9 @@ namespace CornellBox
             cube.Faces.Add(top);
             cube.Faces.Add(bottom);
 
-            cube.shift(4, -2, -7);
-            cube.rotate(40, AxisType.Z);
-            cube.paint(Color.Pink);
-
-            cube.surface = new Surface(0, 0, 0.1, 0.7, 1.5);
-
             return cube;
         }
+
 
         /// <summary>
         /// Преобразует все точки в фигуре по заданной функции

@@ -40,23 +40,25 @@ namespace CornellBox
             Light l = new Light(new Point(0, 0, 9.8), new Point(1, 1, 1));
             lights.Add(l);
 
-            // куб
-            Shape cube = Shape.createCube(3);
+            // большой куб слева
+            Shape cube1 = Shape.createCube(3.5);
+            cube1.shift(3, -2, -7);
+            cube1.rotate(40, AxisType.Z);
+            cube1.paint(Color.Pink);
+            cube1.surface = new Surface(0, 0, 0.1, 0.8, 1);
+
+            // маленький куб справа
+            Shape cube2 = Shape.createCube(2);
+            cube2.shift(3, -2, 0);
+            cube2.rotate(50, AxisType.Z);
+            cube2.rotate(-15, AxisType.X);
+            cube2.paint(Color.Purple);
+            cube2.surface = new Surface(0, 0.5, 0.15, 0.6, 1);
 
             // добавляем все в комнату
-            scene.Add(box);
-            scene.Add(cube);
+            scene.AddRange(new List<Shape> { box, cube1, cube2 });
 
             backwardRayTracing();
-            drawScene();
-        }
-
-        // рисует сцену
-        public void drawScene()
-        {
-            for (int i = 0; i < width; ++i)
-                for (int j = 0; j < height; ++j)
-                    (cornellBox.Image as Bitmap).SetPixel(i, j, colors[i, j]);
         }
 
         public void backwardRayTracing()
@@ -93,6 +95,11 @@ namespace CornellBox
                 }
                 start += widthRatio;
             }
+
+            // выводим сцену на экран
+            for (int i = 0; i < width; ++i)
+                for (int j = 0; j < height; ++j)
+                    (cornellBox.Image as Bitmap).SetPixel(i, j, colors[i, j]);
         }
 
     }
