@@ -31,13 +31,14 @@ namespace CornellBox
 
         public Point color;       // цвет покрытия
 
-        public Surface(double reflect, double refract, double amb, double diff, double env)
+        public Surface(double reflect, double refract, double amb, double diff, double env, Point col = null)
         {
             reflection = reflect;
             refraction = refract;
             ambient = amb;
             diffuse = diff;
             environment = env;
+            color = col;
         }
 
         public Surface(Surface s)

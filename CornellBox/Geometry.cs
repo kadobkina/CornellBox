@@ -15,7 +15,7 @@ namespace CornellBox
     /// <summary>
     /// Типы фигур
     /// </summary>
-    public enum ShapeType { Cube, Circle};
+    public enum ShapeType { Cube, Sphere };
 
     // точка
     public class Point
@@ -176,11 +176,15 @@ namespace CornellBox
         public List<Point> Vertices = new List<Point>(); 
         public List<Face> Faces = new List<Face>();        
         public Surface surface;
+
+        //для шара
+        public double diameter = 0;
+
         public Shape(ShapeType st) 
         {
             shapeType = st;
         }
-        public Color color = Color.Black;
+        public Color color = Color.Red;
 
         public Shape(Shape shape)
         {
@@ -189,12 +193,16 @@ namespace CornellBox
             foreach (Point p in shape.Vertices)
                 Vertices.Add(new Point(p));
 
+
             foreach (Face s in shape.Faces)
             {
                 Face face = new Face(s);
                 face.color = s.color;
                 Faces.Add(face);
             }
+
+            if (shape.shapeType == ShapeType.Sphere)
+                diameter = shape.diameter;
         }
 
         // центр комнаты
@@ -318,12 +326,24 @@ namespace CornellBox
             return cube;
         }
 
+        // создает шар
+        static public Shape createSphere(Point pos, double diam)
+        {
+            Shape sphere = new Shape(ShapeType.Sphere);
+            //sphere.position = pos;
+            Face front = new Face(sphere);
+            front.Vertices.Add(0);
+            sphere.Vertices.Add(pos);
+            sphere.diameter = diam;
+            return sphere;
+        }
 
-        /// <summary>
-        /// Преобразует все точки в фигуре по заданной функции
-        /// </summary>
-        /// <param name="f"> Функция, преобразующая точку фигуры </param>
-        public void transformPoints(Func<Point, Point> f)
+
+            /// <summary>
+            /// Преобразует все точки в фигуре по заданной функции
+            /// </summary>
+            /// <param name="f"> Функция, преобразующая точку фигуры </param>
+            public void transformPoints(Func<Point, Point> f)
         {
             this.Vertices = this.Vertices.Select(x => f(x)).ToList();
         }
@@ -422,6 +442,39 @@ namespace CornellBox
         }
 
         /// <summary>
+        /// https://viclw17.github.io/2018/07/16/raytracing-ray-sphere-intersection/
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="pos"> Позиция центра шара </param>
+        /// <param name="diam"> Диаметр шара </param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static bool raySphereIntersection(Ray r, Point pos, double diam, out double intersectPixel)
+        {
+            intersectPixel = 0;
+
+            Point oc = r.position - pos;
+            double a = Point.Scalar(r.direction, r.direction);
+            double b = 2.0 * Point.Scalar(oc, r.direction);
+            double c = Point.Scalar(oc, oc) - Math.Pow(diam/2,2);
+            double discriminant = b * b - 4*a*c;
+
+            if (discriminant >= 0)
+            {
+                double temp1 = (-b + Math.Sqrt(discriminant)) / 2.0 * a;
+                double temp2 = (-b - Math.Sqrt(discriminant)) / 2.0 * a;
+
+                intersectPixel = Math.Min(temp1, temp2); 
+
+                if (intersectPixel <= 0.0001)
+                    intersectPixel = Math.Max(temp1, temp2);
+
+                return intersectPixel > 0.0001;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Пересекает ли луч фигуру
         /// </summary>
         /// <param name="r"></param>
@@ -432,26 +485,41 @@ namespace CornellBox
         {
             intersectPixel = 0;
             normal = null;
-            Face face = null;
-            foreach (Face curFace in Faces)
+            if (this.shapeType == ShapeType.Cube)
             {
-                if (rayIntersectsTriangle(r, curFace[0], curFace[1], curFace[3], out double t) || rayIntersectsTriangle(r, curFace[1], curFace[2], curFace[3], out t))
+                Face face = null;
+                foreach (Face curFace in Faces)
                 {
-                    if (intersectPixel == 0 || t < intersectPixel) // ищем ближайшую фигуру
+                    if (rayIntersectsTriangle(r, curFace[0], curFace[1], curFace[3], out double t) || rayIntersectsTriangle(r, curFace[1], curFace[2], curFace[3], out t))
                     {
-                        intersectPixel = t;
-                        face = curFace;
+                        if (intersectPixel == 0 || t < intersectPixel) // ищем ближайшую фигуру
+                        {
+                            intersectPixel = t;
+                            face = curFace;
+                        }
                     }
                 }
+                // если луч пересекает фигуру
+                if (intersectPixel != 0)
+                {
+                    normal = Face.getNormal(face);
+                    surface.color = new Point(face.color.R, face.color.G, face.color.B) / 255;
+                    return true;
+                }
+                return false;
             }
-            // если луч пересекает фигуру
-            if (intersectPixel != 0)
+            else
             {
-                normal = Face.getNormal(face);
-                surface.color = new Point(face.color.R, face.color.G, face.color.B) / 255;
-                return true;
+                if (raySphereIntersection(r, Vertices[0], diameter, out intersectPixel))
+                {
+                    if (intersectPixel > 0.0001)
+                    {
+                        normal = Point.getNormal((r.position + r.direction * (float)intersectPixel) - Vertices[0]);
+                        return true;
+                    }
+                }
+                return false;
             }
-            return false;
         }
     }
 

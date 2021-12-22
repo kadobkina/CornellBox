@@ -53,10 +53,15 @@ namespace CornellBox
             cube2.rotate(50, AxisType.Z);
             cube2.rotate(-15, AxisType.X);
             cube2.paint(Color.Purple);
-            cube2.surface = new Surface(0, 0.5, 0.15, 0.6, 1);
+            cube2.surface = new Surface(0, 0, 0.15, 0.6, 1);
+
+            // шар
+            Shape sphere = Shape.createSphere(new Point(-7, -2, -7), 5);
+            //sphere.paint(Color.Red);
+            sphere.surface = new Surface(0, 0, 0, 0.1, 1, new Point(Color.IndianRed.R, Color.IndianRed.G, Color.IndianRed.B));
 
             // добавляем все в комнату
-            scene.AddRange(new List<Shape> { box, cube1, cube2 });
+            scene.AddRange(new List<Shape> { box, cube1, cube2, sphere });
 
             backwardRayTracing();
         }
