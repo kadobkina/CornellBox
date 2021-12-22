@@ -130,6 +130,7 @@ namespace CornellBox
         {
             return new Point(a / p1.x, a / p1.y, a / p1.z);
         }
+
     }
 
     // грань
@@ -137,7 +138,7 @@ namespace CornellBox
     {
         public Shape curShape = null;
         public List<int> Vertices = new List<int>();
-        public Color color = Color.Black;
+        public Color color;
         public Point normVector;
 
         public Face(Shape shape = null)
@@ -184,7 +185,6 @@ namespace CornellBox
         {
             shapeType = st;
         }
-        public Color color = Color.Red;
 
         public Shape(Shape shape)
         {
@@ -247,6 +247,7 @@ namespace CornellBox
             // передняя
             Face front = new Face(shape);
             front.color = Color.MediumPurple;
+            //front.color = Color.Blue;
             front.Vertices.AddRange(new int[] { 3, 2, 1, 0 });
             // задняя
             Face back = new Face(shape);
@@ -277,7 +278,7 @@ namespace CornellBox
             shape.Faces.Add(top);
             shape.Faces.Add(bottom);
 
-            shape.surface = new Surface(0, 0, 0.03, 0.8, 1);
+            shape.surface = new Surface(0, 0, 0.08, 0.8, 1);
 
             return shape;
         }
@@ -339,11 +340,11 @@ namespace CornellBox
         }
 
 
-            /// <summary>
-            /// Преобразует все точки в фигуре по заданной функции
-            /// </summary>
-            /// <param name="f"> Функция, преобразующая точку фигуры </param>
-            public void transformPoints(Func<Point, Point> f)
+        /// <summary>
+        /// Преобразует все точки в фигуре по заданной функции
+        /// </summary>
+        /// <param name="f"> Функция, преобразующая точку фигуры </param>
+        public void transformPoints(Func<Point, Point> f)
         {
             this.Vertices = this.Vertices.Select(x => f(x)).ToList();
         }
@@ -490,6 +491,7 @@ namespace CornellBox
                 Face face = null;
                 foreach (Face curFace in Faces)
                 {
+                    // если луч пересекает грань(одну из двух половин)
                     if (rayIntersectsTriangle(r, curFace[0], curFace[1], curFace[3], out double t) || rayIntersectsTriangle(r, curFace[1], curFace[2], curFace[3], out t))
                     {
                         if (intersectPixel == 0 || t < intersectPixel) // ищем ближайшую фигуру

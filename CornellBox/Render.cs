@@ -83,11 +83,27 @@ namespace CornellBox
         // n1 и n2 – коэффициенты рефракции для первой среды (в которой распространяется первичный луч) и второй среды прозрачного объекта, t - угол между N и T
         public Ray refractRay(Point pixel, Point normal, double refractionCoef1, double refractionCoef2)
         {
-            double NIscalar = Point.Scalar(normal, direction); // (N*I), direction - I, normal - N
-            double n1divn2 = refractionCoef1 / refractionCoef2; // n1/n2, refractionCoef1 - n1, refractionCoef2 - n2
-            double cost = Math.Sqrt(1 - n1divn2 * n1divn2 * (1 - NIscalar * NIscalar)); // cost, t - угол между N и T
+            /*            double NIscalar = Point.Scalar(normal, direction); // (N*I), direction - I, normal - N
+                        double n1divn2 = refractionCoef1 / refractionCoef2; // n1/n2, refractionCoef1 - n1, refractionCoef2 - n2
+                        double cost = Math.Sqrt(1 - n1divn2 * n1divn2 * (1 - NIscalar * NIscalar)); // cost, t - угол между N и T
 
-            return new Ray(pixel, Point.getNormal((float)n1divn2 * direction - (float)(cost + n1divn2 * NIscalar) * normal)); // (n1/n2)*I - (cost + (n1/n2)*(N*I))*N
+                        return new Ray(pixel, Point.getNormal((float)n1divn2 * direction - (float)(cost + n1divn2 * NIscalar) * normal)); // (n1/n2)*I - (cost + (n1/n2)*(N*I))*N*/
+
+            Ray res_ray;
+            double sclr = Point.Scalar(normal, direction);
+            /*
+             Если луч падает,то он проходит прямо,не преломляясь
+             */
+            double n1n2div = refractionCoef1 / refractionCoef2;
+            double theta_formula = 1 - n1n2div * n1n2div * (1 - sclr * sclr);
+            if (theta_formula >= 0)
+            {
+                float cos_theta = (float)Math.Sqrt(theta_formula);
+                res_ray = new Ray(new Point(pixel), Point.getNormal(direction * (float)n1n2div - (float)(cos_theta + n1n2div * sclr) * normal));
+                return res_ray;
+            }
+            else
+                return null;
         }
 
         /// <summary>
@@ -127,9 +143,9 @@ namespace CornellBox
             return new Point(diffuse.x * serfColor.x, diffuse.y * serfColor.y, diffuse.z * serfColor.z);
         }
 
-        public static Point RayTracing(List<Shape> scene, List<Light> lights, Ray r, int iter, double env)
+        public static Point RayTracing(List<Shape> scene, List<Light> lights, Ray r, int iteration, double envir)
         {
-            if (iter <= 0)
+            if (iteration <= 0)
                 return new Point(0, 0, 0);
 
             // итоговый цвет пикселя после трассировки лучей
@@ -154,29 +170,30 @@ namespace CornellBox
                     }
             }
 
+            // текущий пиксель пересечения луча и фигурой
+            Point curPixel = r.position + r.direction * (float)intersectionPixel;
+
             if (intersectionPixel == 0) // если луч не пересекает фигуру, то он уходит в свободное пространство
                 return new Point(0, 0, 0);
-
 
             // определение среды
             if (Point.Scalar(r.direction, normal) > 0)
                 normal *= -1;
 
-            // текущий пиксель пересечения луча и фигурой
-            Point curPixel = r.position + r.direction * (float)intersectionPixel;
-
             foreach (Light light in lights)
             {
                 // фоновый ambient цвет 
-                Point ambient_coef = light.intensity * (float)surface.ambient;
-                ambient_coef.x = (ambient_coef.x * surface.color.x);
-                ambient_coef.y = (ambient_coef.y * surface.color.y);
-                ambient_coef.z = (ambient_coef.z * surface.color.z);
-                newColor += ambient_coef; // Если точка закрыта от освещения всеми источниками сцены, ей присваивается фоновый ambient цвет
+                Point ambCoef = light.intensity * (float)surface.ambient;
+                ambCoef = new Point(ambCoef.x * surface.color.x, ambCoef.y * surface.color.y, ambCoef.z * surface.color.z);
+                newColor += ambCoef; // Если точка закрыта от освещения всеми источниками сцены, ей присваивается фоновый ambient цвет
 
                 if (pixelsVisibleFromLightSource(scene, curPixel, light.position))
                     newColor += localLight(light, curPixel, normal, surface.color, surface.diffuse);
             }
+
+            // если фигура зеркальная
+            if (surface.reflection !=0)
+                newColor += (float)surface.reflection * RayTracing(scene, lights, r.reflectRay(curPixel, normal), iteration - 1, envir);
 
             return newColor;
         }
