@@ -37,8 +37,9 @@ namespace CornellBox
             camera = Shape.boxCenter(box) + Face.getNormal(box.Faces[0]) * 20;
 
             // свет
-            Light l = new Light(new Point(0, 0, 9.8), new Point(1, 1, 1));
-            lights.Add(l);
+            Light light1 = new Light(new Point(0, 0, 9.8), new Point(1, 1, 1));
+            Light light2 = new Light(new Point(9.8, -9.8, 9.8), new Point(1, 1, 1));
+            lights.AddRange(new List<Light> { light1, light2 });
 
             // большой куб слева
             Shape cube1 = Shape.createCube(3.5);
