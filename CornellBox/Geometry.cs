@@ -402,11 +402,11 @@ namespace CornellBox
         /// <param name="p0"></param>
         /// <param name="p1"></param>
         /// <param name="p2"></param>
-        /// <param name="intersectPixel"></param>
+        /// <param name="dist"></param>
         /// <returns></returns>
-        public bool rayIntersectsTriangle(Ray r, Point p0, Point p1, Point p2, out double intersectPixel)
+        public bool rayIntersectsTriangle(Ray r, Point p0, Point p1, Point p2, out double dist)
         {
-            intersectPixel = -1;
+            dist = -1;
             // compute plane's normal
             Point edge1 = p1 - p0;
             Point edge2 = p2 - p0;
@@ -435,7 +435,7 @@ namespace CornellBox
             double t = d * Point.Scalar(edge2, q);
             if (t > 0.0001)
             {
-                intersectPixel = t;
+                dist = t;
                 return true;
             }
             else  
@@ -450,9 +450,9 @@ namespace CornellBox
         /// <param name="diam"> Диаметр шара </param>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static bool raySphereIntersection(Ray r, Point pos, double diam, out double intersectPixel)
+        public static bool raySphereIntersection(Ray r, Point pos, double diam, out double dist)
         {
-            intersectPixel = 0;
+            dist = 0;
 
             Point oc = r.position - pos;
             double a = Point.Scalar(r.direction, r.direction);
@@ -465,12 +465,12 @@ namespace CornellBox
                 double temp1 = (-b + Math.Sqrt(discriminant)) / 2.0 * a;
                 double temp2 = (-b - Math.Sqrt(discriminant)) / 2.0 * a;
 
-                intersectPixel = Math.Min(temp1, temp2); 
+                dist = Math.Min(temp1, temp2); 
 
-                if (intersectPixel <= 0.0001)
-                    intersectPixel = Math.Max(temp1, temp2);
+                if (dist <= 0.0001)
+                    dist = Math.Max(temp1, temp2);
 
-                return intersectPixel > 0.0001;
+                return dist > 0.0001;
             }
             return false;
         }
@@ -480,11 +480,11 @@ namespace CornellBox
         /// </summary>
         /// <param name="r"></param>
         /// <param name="normal"></param>
-        /// <param name="intersectPixel"></param>
+        /// <param name="dist"></param>
         /// <returns></returns>
-        public virtual bool rayIntersectsShape(Ray r, out Point normal, out double intersectPixel)
+        public virtual bool rayIntersectsShape(Ray r, out Point normal, out double dist)
         {
-            intersectPixel = 0;
+            dist = 0;
             normal = null;
             if (this.shapeType == ShapeType.Cube)
             {
@@ -494,15 +494,15 @@ namespace CornellBox
                     // если луч пересекает грань(одну из двух половин)
                     if (rayIntersectsTriangle(r, curFace[0], curFace[1], curFace[3], out double t) || rayIntersectsTriangle(r, curFace[1], curFace[2], curFace[3], out t))
                     {
-                        if (intersectPixel == 0 || t < intersectPixel) // ищем ближайшую фигуру
+                        if (dist == 0 || t < dist) // ищем ближайшую фигуру
                         {
-                            intersectPixel = t;
+                            dist = t;
                             face = curFace;
                         }
                     }
                 }
                 // если луч пересекает фигуру
-                if (intersectPixel != 0)
+                if (dist != 0)
                 {
                     normal = Face.getNormal(face);
                     surface.color = new Point(face.color.R, face.color.G, face.color.B) / 255;
@@ -512,11 +512,11 @@ namespace CornellBox
             }
             else
             {
-                if (raySphereIntersection(r, Vertices[0], diameter, out intersectPixel))
+                if (raySphereIntersection(r, Vertices[0], diameter, out dist))
                 {
-                    if (intersectPixel > 0.0001)
+                    if (dist > 0.0001)
                     {
-                        normal = Point.getNormal((r.position + r.direction * (float)intersectPixel) - Vertices[0]);
+                        normal = Point.getNormal((r.position + r.direction * (float)dist) - Vertices[0]);
                         return true;
                     }
                 }

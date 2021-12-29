@@ -119,8 +119,8 @@ namespace CornellBox
 
             foreach (Shape shape in scene)
             {
-                if (shape.rayIntersectsShape(r, out Point normal, out double intersectPixel)) // если луч пересекает какую-то фигуру на сцене
-                    if (Geometry.InRange(intersectPixel, 0.0001f, (light - pixel).Length())) // если луч не выходит за пределы видимой из камеры области сцены
+                if (shape.rayIntersectsShape(r, out Point normal, out double dist)) // если луч пересекает какую-то фигуру на сцене
+                    if (Geometry.InRange(dist, 0.0001f, (light - pixel).Length())) // если луч не выходит за пределы видимой из камеры области сцены
                         return false; // точка пересечения заслонена
             }
             return true;
@@ -151,8 +151,8 @@ namespace CornellBox
             // итоговый цвет пикселя после трассировки лучей
             Point newColor = new Point(0, 0, 0);
 
-            // пиксель пересечения луча и фигуры
-            double intersectionPixel = 0;
+            // расстояние между лучом и точкой пересечения луча с фигурой
+            double dist = 0;
             // нормаль грани, пересеченной лучом
             Point normal = null;
 
@@ -162,18 +162,18 @@ namespace CornellBox
             foreach (Shape shape in scene)
             {
                 if (shape.rayIntersectsShape(r, out Point norm, out double t)) // если луч пересекает какую-то фигуру на сцене
-                    if (t < intersectionPixel || intersectionPixel == 0) // ищем ближайшую фигуру
+                    if (t < dist || dist == 0) // ищем ближайшую фигуру
                     {
-                        intersectionPixel = t;
+                        dist = t;
                         normal = norm;
                         surface = new Surface(shape.surface);
                     }
             }
 
             // текущий пиксель пересечения луча и фигурой
-            Point curPixel = r.position + r.direction * (float)intersectionPixel;
+            Point curPixel = r.position + r.direction * (float)dist;
 
-            if (intersectionPixel == 0) // если луч не пересекает фигуру, то он уходит в свободное пространство
+            if (dist == 0) // если луч не пересекает фигуру, то он уходит в свободное пространство
                 return new Point(0, 0, 0);
 
             // определение среды
